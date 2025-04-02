@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Levels {
+  id         Int         @id @default(autoincrement())
+  name       String
+  difficulty Int
+  gameStates GameState[]
+  pieceList  PieceList[]
+}
+
+model GameState {
+  idLevel      Int
+  idPiece      Int
+  x            Int
+  y            Int
+  horientation Int
+  level        Levels @relation(fields: [idLevel], references: [id])
+  piece        Piece  @relation(fields: [idPiece], references: [id])
+
+  @@id([idLevel, idPiece, x, y])
+}
+
+model PieceList {
+  idLevel Int
+  idPiece Int
+  nb      Int     @default(1)
+  level   Levels  @relation(fields: [idLevel], references: [id])
+  piece   Piece   @relation(fields: [idPiece], references: [id])
+
+  @@id([idLevel, idPiece])
+}
+
+model Piece {
+  id         Int         @id @default(autoincrement())
+  type       String      // Using String instead of enum for SQLite compatibility
+  gameStates GameState[]
+  pieceList  PieceList[]
+}

@@ -1,62 +1,62 @@
 const CELLTYPE = {
     empty: {
-        id: 0,
+        id: 1,
         value: "empty"
     },
     full: {
-        id: 1,
+        id: 2,
         value: ""
     },
     WhiteLightSource: {
-        id: 2,
+        id: 3,
         value: "wls"
     },
     WhiteLightCrystal: {
-        id: 3,
+        id: 4,
         value: "wlc"
     },
 
     GreenLightSource: {
-        id: 4,
+        id: 5,
         value: "gls"
     },
     GreenLightCrystal: {
-        id: 5,
+        id: 6,
         value: "glc"
     },
 
     BlueLightSource: {
-        id: 6,
+        id: 7,
         value: "bls"
     },
     BlueLightCrystal: {
-        id: 7,
+        id: 8,
         value: "blc"
     },
 
     RedLightSource: {
-        id: 8,
+        id: 9,
         value: "rls"
     },
     RedLightCrystal: {
-        id: 9,
+        id: 10,
         value: "rlc"
     },
 
     simpleReflector: {
-        id: 10,
+        id: 11,
         value: "simpleR"
     },
     doubleReflector: {
-        id: 11,
+        id: 12,
         value: "doubleR"
     },
     splitterReflector: {
-        id: 12,
+        id: 13,
         value: "splitterR"
     },
     colorReflector: {
-        id: 13,
+        id: 14,
         value: "colorR"
     },
 }
@@ -65,7 +65,8 @@ const HORIENTATION = {
     up: 0,
     right: 1,
     down: 2,
-    left: 3
+    left: 3,
+    none: -1
 }
 
 const LASERCOLOR = {
@@ -88,124 +89,149 @@ const LASERCOLOR = {
 }
 
 const SIZE = 50;
-//import Piece from '/src/class/pieceClass.js';
+const GRID_SIZE = 9;
 
+export { CELLTYPE, HORIENTATION, SIZE, GRID_SIZE };
 
 export default class GridScene extends Phaser.Scene {
 
     constructor() {
-        super({
-            key: "GridScene",
-            active: true
-        })
-
+        super({ key: 'GridScene' });
+        
         /**
-         * Liste des lasers sur la grille
+         * Liste des pièces sur la grille
          * @type {{ pieceType: Number, horientation: Number, pieceId: Number, cell: any }[][]}
          * @public
          */
-        this.grid;
-        this.pieceList;
-
-        this.selectedPieceId;
+        this.grid = [];
+        
+        /**
+         * Liste des pièces disponibles
+         * @type {{ pieceType: Number, horientation: Number, pieceId: Number, cell: any }[][]}
+         * @public
+         */
+        this.pieceList = [];
+        
+        /**
+         * Id de la pièce selectionné
+         * @type {Number}
+         * @public
+         */
+        this.selectedPieceId = -1;
+        
         /**
          * Liste des source de laser
          * @type {{color: { id: Number, value: Number }, horientation: Number,coordinate: { x: Number, y: Number }}[]}
          * @public
          */
-        this.lightSourceList;
+        this.lightSourceList = [];
+        
         /**
          * Liste des lasers sur la grille
          * @type {{ xStart: Number, yStart: Number, xEnd: Number, yEnd: Number, color: { id: Number, value: Number } }[]}
          * @public
          */
-        this.laserList;
+        this.laserList = [];
+        
         /**
          * Liste des lignes affiché sur la grille
          * @type {[]}
          * @public
          */
-        this.graphList;
+        this.graphList = [];
+        
         /**
          * Liste des crystaux sur la grille
          * @type {{colorId: Number, isSatisfied: Boolean, coordinate: { x: Number, y: Number }}[]}
          * @public
          */
-        this.lightCrystalList;
+        this.lightCrystalList = [];
+        
+        /**
+         * ID du niveau actuel
+         * @type {Number}
+         * @public
+         */
+        this.levelId = 1; // Valeur par défaut
     }
 
-    init() {
-        this.grid = [
-            [{ pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }],
-            [{ pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }],
-            [{ pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.full.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }],
-            [{ pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }],
-            [{ pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }],
-            [{ pieceType: CELLTYPE.WhiteLightCrystal.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.WhiteLightSource.id, horientation: HORIENTATION.up, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }],
-            [{ pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }],
-            [{ pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }],
-            [{ pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }],
-        ];
-        this.pieceList = [
-            { pieceType: CELLTYPE.simpleReflector.id, isUsed: false, coordinate: { x: -1, y: -1 }, piece: null, mask: null },
-            { pieceType: CELLTYPE.simpleReflector.id, isUsed: false, coordinate: { x: -1, y: -1 }, piece: null, mask: null },
-            { pieceType: CELLTYPE.simpleReflector.id, isUsed: false, coordinate: { x: -1, y: -1 }, piece: null, mask: null },
-            { pieceType: CELLTYPE.doubleReflector.id, isUsed: false, coordinate: { x: -1, y: -1 }, piece: null, mask: null },
-            { pieceType: CELLTYPE.splitterReflector.id, isUsed: false, coordinate: { x: -1, y: -1 }, piece: null, mask: null },
-            { pieceType: CELLTYPE.colorReflector.id, isUsed: false, coordinate: { x: -1, y: -1 }, piece: null, mask: null },
+    async loadGameState(levelId) {
+        try {
+            const response = await fetch(`http://localhost:3001/gamestate/grid/${levelId}`);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error loading game state:', error);
+            return null;
+        }
+    }
 
-        ];
+    async init(data) {
+        // Récupérer l'ID du niveau depuis les données de scène
+        if (data && data.levelId) {
+            this.levelId = data.levelId;
+        }
+        
+        // Load game state from API
+        const gameState = await this.loadGameState(this.levelId);
+        
+        // Create empty grid
+        this.grid = Array(9).fill(null).map(() => 
+            Array(9).fill(null).map(() => ({
+                pieceType: CELLTYPE.empty.id,
+                horientation: -1,
+                pieceId: -1,
+                cell: null
+            }))
+        );
+
+        // If we have game state from API, update the grid with placed pieces
+        if (gameState) {
+            Object.entries(gameState.placedPieces).forEach(([key, piece]) => {
+                const [x, y] = key.split(',').map(Number);
+                this.grid[y][x] = {
+                    ...piece,
+                    cell: null
+                };
+            });
+            console.log(gameState);
+            
+            // Update piece list
+            this.pieceList = gameState.pieceList;
+        } else {
+            // Fallback to default grid if API call fails
+            this.grid = [
+                [{ pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }],
+                [{ pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }],
+                [{ pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.full.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.GreenLightCrystal.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }],
+                [{ pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }],
+                [{ pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }],
+                [{ pieceType: CELLTYPE.RedLightCrystal.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.WhiteLightSource.id, horientation: HORIENTATION.up, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }],
+                [{ pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.full.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }],
+                [{ pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }],
+                [{ pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }, { pieceType: CELLTYPE.empty.id, horientation: -1, pieceId: -1, cell: null }],
+            ];
+            this.pieceList = [
+                { pieceType: CELLTYPE.simpleReflector.id, isUsed: false, coordinate: { x: -1, y: -1 }, piece: null, mask: null },
+                { pieceType: CELLTYPE.simpleReflector.id, isUsed: false, coordinate: { x: -1, y: -1 }, piece: null, mask: null },
+                { pieceType: CELLTYPE.simpleReflector.id, isUsed: false, coordinate: { x: -1, y: -1 }, piece: null, mask: null },
+                { pieceType: CELLTYPE.doubleReflector.id, isUsed: false, coordinate: { x: -1, y: -1 }, piece: null, mask: null },
+                { pieceType: CELLTYPE.splitterReflector.id, isUsed: false, coordinate: { x: -1, y: -1 }, piece: null, mask: null },
+                { pieceType: CELLTYPE.colorReflector.id, isUsed: false, coordinate: { x: -1, y: -1 }, piece: null, mask: null },
+    
+            ];
+        }
+
         this.selectedPieceId = -1;
         this.lightSourceList = [];
-
         this.laserList = [];
         this.graphList = [];
         this.lightCrystalList = [];
-
     }
 
-    preload() {
-
-        this.load.image(CELLTYPE.empty.value, '/static/empty.jpg');
-
-        this.load.image('rightArrow', '/static/rightArrow.jpg');
-        this.load.image('leftArrow', '/static/leftArrow.jpg');
-        this.load.image('cancelButton', '/static/cancelButton.jpg');
-
-        this.load.image(CELLTYPE.WhiteLightSource.value, '/static/whiteLightSource.jpg');
-        this.load.image(CELLTYPE.WhiteLightCrystal.value, '/static/whiteLightCrystal.jpg');
-
-        this.load.image(CELLTYPE.GreenLightSource.value, '/static/greenLightSource.jpg');
-        this.load.image(CELLTYPE.GreenLightCrystal.value, '/static/greenLightCrystal.jpg');
-
-        this.load.image(CELLTYPE.BlueLightSource.value, '/static/blueLightSource.jpg');
-        this.load.image(CELLTYPE.BlueLightCrystal.value, '/static/blueLightCrystal.jpg');
-
-        this.load.image(CELLTYPE.RedLightSource.value, '/static/redLightSource.jpg');
-        this.load.image(CELLTYPE.RedLightCrystal.value, '/static/redLightCrystal.jpg');
-
-        this.load.image(CELLTYPE.simpleReflector.value, '/static/simpleReflector.jpg');
-        this.load.image(CELLTYPE.doubleReflector.value, '/static/doubleReflector.jpg');
-        this.load.image(CELLTYPE.splitterReflector.value, '/static/splitterReflector.jpg');
-        this.load.image(CELLTYPE.colorReflector.value, '/static/colorReflector.jpg');
-    }
-
-    create() {
-
-        // Generate the Grid
-        this.gridGeneration();
-        this.pieceGeneration();
-
-        // Génère les options pour tourner/supprimer une piece
-        this.pieceControl();
-
-        // Génère les lasers
-        this.setLaser();
-
-    }
-    /**
-     * Génère les pièces pouvant être placé
-     */
     pieceGeneration() {
         const pieceList = this.pieceList;
         for (let i = 0; i < pieceList.length; i++) {
@@ -231,6 +257,43 @@ export default class GridScene extends Phaser.Scene {
 
                 case CELLTYPE.colorReflector.id:
                     piece = this.add.image(x, y, CELLTYPE.colorReflector.value);
+                    break;
+
+                case CELLTYPE.full.id:
+                    piece = this.add.rectangle(x, y, SIZE, SIZE, 0x7f00ff);
+                    piece.setStrokeStyle(2, 0xefc53f);
+                    break;
+
+                case CELLTYPE.WhiteLightSource.id:
+                    piece = this.add.image(x, y, CELLTYPE.WhiteLightSource.value);
+                    break;
+
+                case CELLTYPE.GreenLightSource.id:
+                    piece = this.add.image(x, y, CELLTYPE.GreenLightSource.value);
+                    break;
+
+                case CELLTYPE.BlueLightSource.id:
+                    piece = this.add.image(x, y, CELLTYPE.BlueLightSource.value);
+                    break;
+
+                case CELLTYPE.RedLightSource.id:
+                    piece = this.add.image(x, y, CELLTYPE.RedLightSource.value);
+                    break;
+
+                case CELLTYPE.WhiteLightCrystal.id:
+                    piece = this.add.image(x, y, CELLTYPE.WhiteLightCrystal.value);
+                    break;
+
+                case CELLTYPE.GreenLightCrystal.id:
+                    piece = this.add.image(x, y, CELLTYPE.GreenLightCrystal.value);
+                    break;
+
+                case CELLTYPE.BlueLightCrystal.id:
+                    piece = this.add.image(x, y, CELLTYPE.BlueLightCrystal.value);
+                    break;
+
+                case CELLTYPE.RedLightCrystal.id:
+                    piece = this.add.image(x, y, CELLTYPE.RedLightCrystal.value);
                     break;
 
                 default:
@@ -287,12 +350,13 @@ export default class GridScene extends Phaser.Scene {
                 let laserSourceColor = null;
                 switch (cellType) {
                     case CELLTYPE.empty.id:
-                        cell = this.add.image(x, y, "empty");
+                        cell = this.add.image(x, y, CELLTYPE.empty.value);
                         cell.setInteractive();
                         cell.on('pointerdown', function (pointer) {
 
                             const selectedPieceId = this.selectedPieceId;
                             const pieceType = this.grid[i][j].pieceType;
+
                             console.log("center : ", this.grid[i][j].cell.getCenter())
                             console.log(`i: ${i},j: ${j}\npieceType: ${pieceType}\nhorientation: ${horientation}\nselectedPieceId: ${selectedPieceId}`);
 
@@ -353,7 +417,7 @@ export default class GridScene extends Phaser.Scene {
                         laserSourceColor = LASERCOLOR.blue;
                         break;
 
-                    case CELLTYPE.GreenLightCrystal:
+                    case CELLTYPE.GreenLightCrystal.id:
                         cell = this.add.image(x, y, CELLTYPE.GreenLightCrystal.value);
                         lightCrystalColor = LASERCOLOR.green;
                         break;
@@ -390,7 +454,7 @@ export default class GridScene extends Phaser.Scene {
                         break;
 
                     default:
-                        cell = this.add.image(x, y, "empty");
+                        cell = this.add.image(x, y, CELLTYPE.empty.value);
                         break;
                 }
 
@@ -416,7 +480,7 @@ export default class GridScene extends Phaser.Scene {
     }
 
     removePieceOnGrid(x, y) {       
-        this.grid[x][y].cell.setTexture('empty');
+        this.grid[x][y].cell.setTexture(CELLTYPE.empty.value);
         this.grid[x][y].pieceType = CELLTYPE.empty.id;
         this.grid[x][y].horientation = -1;
     }
@@ -727,7 +791,7 @@ export default class GridScene extends Phaser.Scene {
         if (pieceHorientation == HORIENTATION.down && laserHorientation == HORIENTATION.left) {
             redHorientation = HORIENTATION.down;
             greenHorientation = HORIENTATION.left;
-            blueHorientation = HORIENTATION.left;
+            blueHorientation = HORIENTATION.up;
         }
         return { redHorientation, greenHorientation, blueHorientation };
     }
@@ -783,10 +847,71 @@ export default class GridScene extends Phaser.Scene {
         const goBackButton = this.add.text(500, 380, "Revenir à l'accueil", { fontFamily: 'Arial Black', fontSize: 50, fill: '#FFFFFF' })
         .setInteractive()
         .on('pointerover', () => goBackButton.setStyle({ fill: '#FFFF00'}))
-        .on('pointerout', () => goBackButton.setStyle({ fill: '#FFFFFF' }))
-        .on('pointerdown', ()=> {
-            location.reload();
+        .on('pointerout',  () => goBackButton.setStyle({ fill: '#FFFFFF' }))
+        .on('pointerdown', () => {
+            this.scene.start('LevelSelectScene');
         });
 
+    }
+
+    preload() {
+        this.load.image(CELLTYPE.empty.value, '/static/empty.jpg');
+
+        this.load.image('rightArrow', '/static/rightArrow.jpg');
+        this.load.image('leftArrow', '/static/leftArrow.jpg');
+        this.load.image('cancelButton', '/static/cancelButton.jpg');
+
+        this.load.image(CELLTYPE.WhiteLightSource.value, '/static/whiteLightSource.jpg');
+        this.load.image(CELLTYPE.WhiteLightCrystal.value, '/static/whiteLightCrystal.jpg');
+
+        this.load.image(CELLTYPE.GreenLightSource.value, '/static/greenLightSource.jpg');
+        this.load.image(CELLTYPE.GreenLightCrystal.value, '/static/greenLightCrystal.jpg');
+
+        this.load.image(CELLTYPE.BlueLightSource.value, '/static/blueLightSource.jpg');
+        this.load.image(CELLTYPE.BlueLightCrystal.value, '/static/blueLightCrystal.jpg');
+
+        this.load.image(CELLTYPE.RedLightSource.value, '/static/redLightSource.jpg');
+        this.load.image(CELLTYPE.RedLightCrystal.value, '/static/redLightCrystal.jpg');
+
+        this.load.image(CELLTYPE.simpleReflector.value, '/static/simpleReflector.jpg');
+        this.load.image(CELLTYPE.doubleReflector.value, '/static/doubleReflector.jpg');
+        this.load.image(CELLTYPE.splitterReflector.value, '/static/splitterReflector.jpg');
+        this.load.image(CELLTYPE.colorReflector.value, '/static/colorReflector.jpg');
+    }
+
+    create() {
+        // Generate the Grid
+        this.gridGeneration();
+        this.pieceGeneration();
+
+        // Génère les options pour tourner/supprimer une piece
+        this.pieceControl();
+
+        // Ajouter un bouton pour revenir à la sélection de niveau
+        const backButton = this.add.text(50, 50, 'Retour', {
+            fontSize: '18px',
+            fill: '#fff',
+            backgroundColor: '#4a6fa5',
+            padding: { x: 10, y: 5 }
+        }).setInteractive({ useHandCursor: true });
+        
+        backButton.on('pointerover', () => {
+            backButton.setBackgroundColor('#6389c5');
+        });
+        
+        backButton.on('pointerout', () => {
+            backButton.setBackgroundColor('#4a6fa5');
+        });
+        
+        backButton.on('pointerdown', () => {
+            backButton.setBackgroundColor('#3a5a8a');
+        });
+        
+        backButton.on('pointerup', () => {
+            this.scene.start('LevelSelectScene');
+        });
+        
+        // Génère les lasers
+        this.setLaser();
     }
 }
